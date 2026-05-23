@@ -1,0 +1,60 @@
+# Introduction
+
+This is a book created from markdown and executable code.
+
+See @knuth84 for additional discussion of literate programming.
+
+
+
+# Fig. 1b: Grouped Phylum Barplots
+
+```{r}
+
+```
+```{r}
+# ====================================================================
+# 1. 加载必要的包
+# 如果你之前没有安装过 readxl，请先在控制台运行：install.packages("readxl")
+library(readxl)  # 专门用于读取 Excel 文件的包
+library(ggplot2)
+library(dplyr)
+
+# ====================================================================
+# 2. 导入数据 (使用 read_excel 读取 .xlsx 文件)
+# 注意这里改用 read_excel 了，并且文件名就是你的 xlsx 文件
+bb <- read_excel("D:/2026-d2rs/my-website/happy/ren/Fig.1b.xlsx")
+
+# 转换回普通的数据框格式，以防格式冲突
+bb <- as.data.frame(bb)
+
+# ====================================================================
+# 3. 整理图例顺序 (Phylum)
+bb_order <- c(unique(bb %>% filter(Phylum != 'Unknown/Other') %>% pull(Phylum)) %>% sort())
+
+if("Unknown/Other" %in% bb$Phylum) {
+  bb_order <- c(bb_order, 'Unknown/Other')
+}
+
+bb$Phylum <- factor(bb$Phylum, levels = bb_order)
+
+# ====================================================================
+# 4. 开始绘图
+p = ggplot(bb, aes(x = Day, y = Abundance, fill = Phylum))+
+  geom_bar(stat = "identity", 
+           position = "stack", 
+           color = "black") +
+  theme_classic(base_size = 18) +
+  guides(fill = guide_legend(override.aes = list(colour = NULL), reverse=F)) + 
+  theme(legend.key = element_rect(colour = "black")) + 
+  theme(legend.position = "right",
+        legend.text = element_text(size = 16)) + 
+  ylab('Rel. Abundance') + 
+  facet_wrap('Diet') + 
+  xlab('')
+
+# 显示图片
+print(p)
+
+# ====================================================================
+# 5. 保存图片
+ggsave("D:/2026-d2rs/my-website/happy/ren/Fig_1b_Grouped_Phylum_Barplot.png", height = 6, width = 7)
